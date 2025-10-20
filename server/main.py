@@ -48,7 +48,14 @@ async def root():
         raise HTTPException(status_code=500, detail="Bye World! Database connection failed.")
     
 # get request to get the count of products in the database
-# your code here
+@app.get("/products/count")
+async def products():
+    try:
+        count: int = await app.state.db.fetchval("SELECT COUNT(*) FROM products")
+        return {"count": count}
+    except Exception as error:
+        print(error)
+        raise HTTPException(status_code=500, detail="Bye World! Database connection failed.")
 
 # get request to get all products in the database
 # your code here
