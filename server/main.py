@@ -54,14 +54,25 @@ async def products():
         count: int = await app.state.db.fetchval("SELECT COUNT(*) FROM products")
         return {"count": count}
     except Exception as error:
-        print(error)
-        raise HTTPException(status_code=500, detail="Bye World! Database connection failed.")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # get request to get all products in the database
 # your code here
 
 # get request to get a product by its id
-# your code here
+@app.get("/products/{id}")
+async def search_by_id(id: int):
+    try:
+        if id < 0:
+            raise HTTPException(status_code=400, detail="Invalid id")
+        product = await app.state.db.fetchrow("SELECT * FROM products WHERE id = $1", id)
+        if product is None:
+            raise HTTPException(status_code=404, detail="Product not found")
+        return {"product": product}
+    except HTTPException as error:
+        raise error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # ======================================== run the app =========================================
     
