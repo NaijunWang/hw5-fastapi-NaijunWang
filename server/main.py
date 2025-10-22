@@ -49,7 +49,7 @@ async def root():
     
 # get request to get the count of products in the database
 @app.get("/products/count")
-async def products():
+async def product_count():
     try:
         count: int = await app.state.db.fetchval("SELECT COUNT(*) FROM products")
         return {"count": count}
@@ -57,18 +57,25 @@ async def products():
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # get request to get all products in the database
-# your code here
+@app.get("/products/all")
+async def get_all_products(page: int = 1, limit: int = 10):
+    try:
+        offset = (page - 1) * limit
+        selected_products = await app.state.db.fetch("SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2", limit, offset)
+        return [dict(row) for row in selected_products]
+    except Exception as error:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # get request to get a product by its id
 @app.get("/products/{id}")
 async def search_by_id(id: int):
     try:
         if id < 0:
-            raise HTTPException(status_code=400, detail="Invalid id")
+            raise HTTPException(status_code=400, detail="Invalid ID")
         product = await app.state.db.fetchrow("SELECT * FROM products WHERE id = $1", id)
         if product is None:
-            raise HTTPException(status_code=404, detail="Product not found")
-        return {"product": product}
+            raise HTTPException(status_code=404, detail="Product Not Found")
+        return dict(product)
     except HTTPException as error:
         raise error
     except Exception as error:
